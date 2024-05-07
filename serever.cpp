@@ -3,7 +3,6 @@
 //Or Avital 
 
 
-
 #include "std_lib_facilities.h"
 
 void loadCSV(String filename){
@@ -20,30 +19,28 @@ int main(){
 
     vector<int> destinationVector;
     vector<int> sourceVector;
-    std::string line;
-    while (getline(ofs, line)) {
-        std::istringstream iss(line);
+
+    string line;
+
+    // go throw ofs, add the data from the file to the subsequent vector // 
+    while (getline(ofs, line)) {        
+        istringstream iss(line);        //passing the string we want to parse as argument
         int source, destination;
-        if (iss >> source >> destination) {
+        if (iss >> source >> destination) {        //extract two integers from the iss stream
             sourceVector.push_back(source);
             destinationVector.push_back(destination);
         }
     }
 
-    // Display the contents of the source and destination vectors
-    std::cout << "Source Vector:\n";
+    // Display the contents of the source and destination vectors for testing
+    cout << "Source Vector:\n";
     int index = 0;
     for (int source : sourceVector) {
-        std::cout << index + 1 << ")  " << source << '\t' << destinationVector[index] << '\n';
+        cout << index + 1 << ")  " << source << '\t' << destinationVector[index] << '\n';
         index++;
     }
-    std::cout << '\n';
+    cout << '\n';
 
-    // std::cout << "Destination Vector:\n";
-    // for (int destination : destinationVector) {
-    //     std::cout << destination << ' ';
-    // }
-    // std::cout << '\n';
     
     return 0;
 }
