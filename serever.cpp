@@ -9,12 +9,25 @@ void loadCSV(String filename){
 
 }
 
+/* template for the final signiture of the main function
+
+int main(int argc, char* argv[]){
+
+    string input_file = argv[1];
+    int port = argv[2];
+
+}
+
+
+*/
+
+
 int main(){
 
     ifstream ofs("db.csv");
     
     // if there is an error in opening the file, display error message in the terminal
-    if(!ofs) std::cout << "ERROR: file did not open" << '\n';
+    if(!ofs) cout << "ERROR: file did not open" << '\n';
 
 
     vector<int> destinationVector;
