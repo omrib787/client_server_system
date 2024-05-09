@@ -4,7 +4,14 @@
 
 /*add IDs before submition*/
 
-
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "std_lib_facilities.h"
 
 void loadCSV(String filename){
@@ -67,6 +74,27 @@ int main(){
         }
         cout << endl;
     }
+
+    int source;
+    int destination;
+
+    /*creating a socket*/
+
+    
+
+    int server_fd = socket(AF_INET, SOCK_STREAM , 0);
+
+    if (server_fd < 0) ("ERROR opening socket");
+
+    sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(4444);
+    bind(server_fd, (sockaddr*)&addr, sizeof(addr));
+
+    
+
+    close(server_fd);
     
     return 0;
 }
