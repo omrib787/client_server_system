@@ -49,13 +49,13 @@ void printGraph(const unordered_map<int, vector<int>>& graph) {
 
 // Function to write the adjacency list to a file
 void writeAdjacencyListToFile(const unordered_map<int, vector<int>>& adjacencyList) {
-    ofstream outputFile("adjacency_list2.txt");
+    ofstream outputFile("adjacency_list.txt");
     if (!outputFile) {
         cout << "ERROR: Unable to create/open file for writing" << endl;
         return;
     }
 
-    outputFile << "Adjacency List beta:\n";
+    outputFile << "Adjacency List:\n";
     for (const auto& pair : adjacencyList) {
         outputFile << "Node " << pair.first << " -> ";
         for (int neighbor : pair.second) {
@@ -70,7 +70,7 @@ void writeAdjacencyListToFile(const unordered_map<int, vector<int>>& adjacencyLi
 
 // Function to perform BFS and find the shortest path between two nodes
 vector<int> bfsShortestPath(const unordered_map<int, vector<int>>& graph, int startNode, int endNode) {
-    queue<int> q;
+    queue<int> q;       //the frontier of nodes being explored 
     vector<bool> visited(graph.size(), false);
     vector<int> parent(graph.size(), -1);
 
@@ -128,20 +128,23 @@ int main() {
     writeAdjacencyListToFile(graph);
 
 
-    int startNode = 0;
-    int endNode = 19382;
+    int startNode = 21719;
+    int endNode = 44;
 
     vector<int> shortestPath = bfsShortestPath(graph, startNode, endNode);
+
+    String output;
 
     if (shortestPath.empty()) {
         cout << "No path found between nodes " << startNode << " and " << endNode << endl;
     } else {
         cout << "Shortest path between nodes " << startNode << " and " << endNode << " is: ";
         for (int node : shortestPath) {
-            cout << node << " ";
+            output += to_string(node) + " ";
         }
-        cout << endl;
+        cout << output;
     }
+
 
     return 0;
 }
