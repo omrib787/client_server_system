@@ -17,15 +17,13 @@
 using namespace std;
 
 // Function to read the CSV file and populate the graph
-void readCSV(const string& filename, unordered_map<int, vector<int>>& graph) {
+void readCSV(const string& filename, map<int, vector<int>>& graph) {
     ifstream file(filename);
     string line;
-
     while (getline(file, line)) {
         stringstream ss(line);
         int node1, node2;
         ss >> node1 >> node2;
-
         // Skip edges from a node to itself
         if (node1 != node2) {
             // Add edge from node1 to node2
@@ -37,7 +35,7 @@ void readCSV(const string& filename, unordered_map<int, vector<int>>& graph) {
 }
 
 // Function to print the graph
-void printGraph(const unordered_map<int, vector<int>>& graph) {
+void printGraph(const map<int, vector<int>>& graph) {
     for (const auto& pair : graph) {
         cout << "Node " << pair.first << " -> ";
         for (int neighbor : pair.second) {
@@ -47,8 +45,9 @@ void printGraph(const unordered_map<int, vector<int>>& graph) {
     }
 }
 
+
 // Function to write the adjacency list to a file
-void writeAdjacencyListToFile(const unordered_map<int, vector<int>>& adjacencyList) {
+void writeAdjacencyListToFile(const map<int, vector<int>>& adjacencyList) {
     ofstream outputFile("adjacency_list.txt");
     if (!outputFile) {
         cout << "ERROR: Unable to create/open file for writing" << endl;
@@ -69,18 +68,15 @@ void writeAdjacencyListToFile(const unordered_map<int, vector<int>>& adjacencyLi
 }
 
 // Function to perform BFS and find the shortest path between two nodes
-vector<int> bfsShortestPath(const unordered_map<int, vector<int>>& graph, int startNode, int endNode) {
-    queue<int> q;       //the frontier of nodes being explored 
+vector<int> bfsShortestPath(const map<int, vector<int>>& graph, int startNode, int endNode) {
+    queue<int> q; // the frontier of nodes being explored
     vector<bool> visited(graph.size(), false);
     vector<int> parent(graph.size(), -1);
-
     q.push(startNode);
     visited[startNode] = true;
-
     while (!q.empty()) {
         int currentNode = q.front();
         q.pop();
-
         if (currentNode == endNode) {
             // Reconstruct the path
             vector<int> path;
@@ -93,7 +89,6 @@ vector<int> bfsShortestPath(const unordered_map<int, vector<int>>& graph, int st
             reverse(path.begin(), path.end());
             return path;
         }
-
         for (int neighbor : graph.at(currentNode)) {
             if (!visited[neighbor]) {
                 q.push(neighbor);
@@ -102,10 +97,10 @@ vector<int> bfsShortestPath(const unordered_map<int, vector<int>>& graph, int st
             }
         }
     }
-
     // If no path found
     return {};
 }
+
 
 /* template for the final signiture of the main function
 
@@ -121,20 +116,15 @@ int main(int argc, char* argv[]){
 
 int main() {
     string filename = "db.csv";
-    unordered_map<int, vector<int>> graph;
-
+    map<int, vector<int>> graph;
     readCSV(filename, graph);
     printGraph(graph);
     writeAdjacencyListToFile(graph);
 
-
-    int startNode = 21719;
-    int endNode = 44;
-
+    int startNode = 0;
+    int endNode = 19382;
     vector<int> shortestPath = bfsShortestPath(graph, startNode, endNode);
-
-    String output;
-
+    string output;
     if (shortestPath.empty()) {
         cout << "No path found between nodes " << startNode << " and " << endNode << endl;
     } else {
@@ -144,7 +134,6 @@ int main() {
         }
         cout << output;
     }
-
 
     return 0;
 }
