@@ -96,21 +96,13 @@ vector<int> bfsShortestPath(const map<int, vector<int>>& graph, int startNode, i
     return {};
 }
 
-
-/* template for the final signiture of the main function
+// to run main, type in terminal: g++ server.cpp  ->  ./a.out db.csv 4444  (or any other port number over 1024)
 
 int main(int argc, char* argv[]){
 
-    string input_file = argv[1];
-    int port = argv[2];
+    string filename = argv[1];
+    int port = atoi(argv[2]);
 
-}
-
-
-*/
-
-int main() {
-    string filename = "db.csv";
     map<int, vector<int>> graph;
     readCSV(filename, graph);
     printGraph(graph);
