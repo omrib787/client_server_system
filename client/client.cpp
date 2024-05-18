@@ -12,12 +12,6 @@ using namespace std;
 
 // following zoom recording of Michael from 19-03
 int main(int argc, char *argv[]) {
-    // template for quick and easy testing //
-    // string input_file = argv[1];
-    // string output_file = argv[2];
-    // string old_string = argv[3];
-    // string new_string = argv[4];
-
     std::string ip = argv[1];
     int port = atoi(argv[2]);
     int source = atoi(argv[3]);
@@ -26,14 +20,29 @@ int main(int argc, char *argv[]) {
     cout << "ip adrress: " << ip << "\nport num: " << port << "\nsource: " << source << "\ndestination: " << destination << endl;
 
 
+
+
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in addr = {0};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(ip.c_str());
-    addr.sin_port = htons(4444);
-    connect(fd, (sockaddr*)&addr, sizeof(addr));
+    addr.sin_port = htons(port);
+    bind(fd, (sockaddr*)&addr, sizeof(addr));
+    listen(fd, 5);
 
-    //work
-
+    for(;;){
+        int fd2 = accept(fd, NULL, NULL);
+        if (fork() == 0){
+            for ( int i = 0 ; i < 4 ; ++i){
+                string s = to_string(i) + "\n";
+                write(fd2, &s[0], s.size());
+                // write(fd2, &source, sizeof(source));
+                // write(fd2, &destination, sizeof(destination));
+                sleep(1);
+            }
+            close(fd2);
+            exit(0);
+        }
+    }
     close(fd);
 }
