@@ -139,7 +139,7 @@ int main(int argc, char* argv[]){
             continue;
         }
 
-        //split the message to arguments needed for the search
+        // split the message to arguments needed for the search
         string payload(buffer);
         size_t comma_pos = payload.find(',');
         int source = stoi(payload.substr(0, comma_pos));
@@ -150,31 +150,41 @@ int main(int argc, char* argv[]){
 
         for (int i = 0; i < lastRequests.size(); i++) {
 
-            if (!foundInCache) {
-                shortestPath = bfsShortestPath(graph, source, destination);
-                if (lastRequests.size() >= 10) {
-                    lastRequests.pop();
-                    lastResults.pop();
-                }
-                lastRequests.push(make_pair(source, destination));
-                lastResults.push(shortestPath);
+        if (!foundInCache) {
+            shortestPath = bfsShortestPath(graph, source, destination);
+            if (lastRequests.size() >= 10) {
+                lastRequests.pop();
+                lastResults.pop();
             }
-
-
-            string output;
-            if (shortestPath.empty()) {
-                cout << "No path found between nodes " << source << " and " << destination << endl;
-            } else {
-                cout << "Shortest path between nodes " << source << " and " << destination << " is: ";
-                for (int node : shortestPath) {
-                    output += to_string(node) + " ";
-                }
-                cout << output << endl;
-            }
-
-            write(client_sockfd, output.c_str(), output.length());
-            close(client_sockfd);
+            lastRequests.push(make_pair(source, destination));
+            lastResults.push(shortestPath);
         }
+        }
+
+        if (!foundInCache) {
+            shortestPath = bfsShortestPath(graph, source, destination);
+            if (lastRequests.size() >= 10) {
+                lastRequests.pop();
+                lastResults.pop();
+            }
+            lastRequests.push(make_pair(source, destination));
+            lastResults.push(shortestPath);
+        }
+
+        string output;
+        if (shortestPath.empty()) {
+            cout << "No path found between nodes " << source << " and " << destination << endl;
+        } else {
+            cout << "Shortest path between nodes " << source << " and " << destination << " is: ";
+            for (int node : shortestPath) {
+                output += to_string(node) + " ";
+            }
+            cout << output << endl;
+        }
+
+        write(client_sockfd, output.c_str(), output.length());
+        close(client_sockfd);
+    }
     close(fd);
     return 0;
 }
