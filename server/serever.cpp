@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <queue>
+#include <pthread.h>
 #include "std_lib_facilities.h"
 
 using namespace std;
@@ -108,19 +109,81 @@ int main(int argc, char* argv[]){
     printGraph(graph);
     writeAdjacencyListToFile(graph);
 
-    int startNode = 0;
-    int endNode = 19382;
-    vector<int> shortestPath = bfsShortestPath(graph, startNode, endNode);
-    string output;
-    if (shortestPath.empty()) {
-        cout << "No path found between nodes " << startNode << " and " << endNode << endl;
-    } else {
-        cout << "Shortest path between nodes " << startNode << " and " << endNode << " is: ";
-        for (int node : shortestPath) {
-            output += to_string(node) + " ";
-        }
-        cout << output;
-    }
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in serv_addr = {0};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serv_addr.sin_port = htons(port);
+    bind(fd, (sockaddr*)&serv_addr, sizeof(serv_addr));
 
+    listen(fd, 5);
+
+    queue<pair<int, int>> lastRequests;
+    queue<vector<int>> lastResults;
+
+    while (true) {
+        sockaddr_in client_addr = {0};
+        socklen_t client_len = sizeof(client_addr);
+        int client_sockfd = accept(fd, (sockaddr*)&client_addr, &client_len);
+        if (client_sockfd < 0) {
+            cerr << "Error accepting client connection" << endl;
+            continue;
+        }
+
+        char buffer[256];
+        memset(buffer, 0, sizeof(buffer));
+        int bytes_received = read(client_sockfd, buffer, sizeof(buffer));
+        if (bytes_received < 0) {
+            cerr << "Error receiving data from client" << endl;
+            close(client_sockfd);
+            continue;
+        }
+
+        string payload(buffer);
+        size_t comma_pos = payload.find(',');
+        int source = stoi(payload.substr(0, comma_pos));
+        int destination = stoi(payload.substr(comma_pos + 1));
+
+        vector<int> shortestPath;
+        bool foundInCache = false;
+
+        for (int i = 0; i < lastRequests.size(); i++) {
+
+        if (!foundInCache) {
+            shortestPath = bfsShortestPath(graph, source, destination);
+            if (lastRequests.size() >= 10) {
+                lastRequests.pop();
+                lastResults.pop();
+            }
+            lastRequests.push(make_pair(source, destination));
+            lastResults.push(shortestPath);
+        }
+        }
+
+        if (!foundInCache) {
+            shortestPath = bfsShortestPath(graph, source, destination);
+            if (lastRequests.size() >= 10) {
+                lastRequests.pop();
+                lastResults.pop();
+            }
+            lastRequests.push(make_pair(source, destination));
+            lastResults.push(shortestPath);
+        }
+
+        string output;
+        if (shortestPath.empty()) {
+            cout << "No path found between nodes " << source << " and " << destination << endl;
+        } else {
+            cout << "Shortest path between nodes " << source << " and " << destination << " is: ";
+            for (int node : shortestPath) {
+                output += to_string(node) + " ";
+            }
+            cout << output << endl;
+        }
+
+        write(client_sockfd, output.c_str(), output.length());
+        close(client_sockfd);
+    }
+    close(fd);
     return 0;
 }
