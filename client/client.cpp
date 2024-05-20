@@ -10,6 +10,11 @@
 
 using namespace std;
 
+void printInput(const std::string& ip, int port, int source, int destination) {
+    cout << "IP address: " << ip << "\nPort number: " << port 
+         << "\nSource: " << source << "\nDestination: " << destination << endl;
+}
+
 // following zoom recording of Michael from 19-03
 int main(int argc, char *argv[]) {
     std::string ip = argv[1];
@@ -17,10 +22,7 @@ int main(int argc, char *argv[]) {
     int source = atoi(argv[3]);
     int destination = atoi(argv[4]);
 
-    cout << "ip adrress: " << ip << "\nport num: " << port << "\nsource: " << source << "\ndestination: " << destination << endl;
-
-
-
+//    printInput(ip, port, source, destination);
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in addr = {0};
@@ -34,21 +36,17 @@ int main(int argc, char *argv[]) {
     string payload = to_string(source) + "," + to_string(destination);
     send(fd, payload.c_str(), payload.length(), 0);
 
+    char buffer[256];
+    memset(buffer, 0, sizeof(buffer));
+    int bytes_received = recv(fd, buffer, sizeof(buffer), 0);
+    if (bytes_received < 0) {
+        cerr << "Error receiving data from server" << endl;
+    } else {
+        string result(buffer, bytes_received);
+        cout << result << endl;
+    }
+
     close(fd);
     return 0;
 }
 
-    // for(;;){
-    //     int fd2 = accept(fd, NULL, NULL);
-    //     if (fork() == 0){
-    //         for ( int i = 0 ; i < 4 ; ++i){
-    //             string s = to_string(i) + "\n";
-    //             write(fd2, &s[0], s.size());
-    //             // write(fd2, &source, sizeof(source));
-    //             // write(fd2, &destination, sizeof(destination));
-    //             sleep(1);
-    //         }
-    //         close(fd2);
-    //         exit(0);
-    //     }
-    // }
