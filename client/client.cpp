@@ -39,12 +39,10 @@ int main(int argc, char *argv[]) {
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
     int bytes_received = recv(fd, buffer, sizeof(buffer), 0);
-    if (bytes_received < 0) {
-        cerr << "Error receiving data from server" << endl;
-    } else {
-        string result(buffer, bytes_received);
-        cout << result << endl;
-    }
+
+    string result(buffer, bytes_received);
+    cout << result << endl;
+
 
     close(fd);
     return 0;
