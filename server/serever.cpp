@@ -65,7 +65,7 @@ void writeAdjacencyListToFile(const map<int, vector<int>>& adjacencyList) {
 
 // Function to perform BFS and find the shortest path between two nodes
 vector<int> bfsShortestPath(const map<int, vector<int>>& graph, int startNode, int endNode) {
-    queue<int> q; // the frontier of nodes being explored
+    queue<int> q; // The frontier of nodes being explored
     vector<bool> visited(graph.size(), false);
     vector<int> parent(graph.size(), -1);
     q.push(startNode);
@@ -85,6 +85,7 @@ vector<int> bfsShortestPath(const map<int, vector<int>>& graph, int startNode, i
             reverse(path.begin(), path.end());
             return path;
         }
+        // Adding unvisited nieghbors to the queue
         for (int neighbor : graph.at(currentNode)) {
             if (!visited[neighbor]) {
                 q.push(neighbor);
@@ -97,7 +98,11 @@ vector<int> bfsShortestPath(const map<int, vector<int>>& graph, int startNode, i
     return {};
 }
 
-// to run main, type in terminal: g++ server.cpp  ->  ./a.out db.csv 4444  (or any other port number over 1024)
+/*
+    use the following commands (in server diractory)
+    -   g++ server.cpp
+    -   ./a.out <filename.csv> <port number> 
+*/
 
 int main(int argc, char* argv[]){
 
@@ -109,6 +114,7 @@ int main(int argc, char* argv[]){
     printGraph(graph);
     writeAdjacencyListToFile(graph);
 
+    // Creating a TCP server socket to listen for incoming connections
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in serv_addr = {0};
     serv_addr.sin_family = AF_INET;
@@ -118,10 +124,12 @@ int main(int argc, char* argv[]){
 
     listen(fd, 5);
 
+    // Setting up queues for 10 last requests and results
     queue<pair<int, int>> lastRequests;
     queue<vector<int>> lastResults;
 
     while (true) {
+        // The server waits for a client connection
         sockaddr_in client_addr = {0};
         socklen_t client_len = sizeof(client_addr);
         int client_sockfd = accept(fd, (sockaddr*)&client_addr, &client_len);
@@ -130,16 +138,13 @@ int main(int argc, char* argv[]){
             continue;
         }
 
+        // Receiving data from client
         char buffer[256];
         memset(buffer, 0, sizeof(buffer));
         int bytes_received = read(client_sockfd, buffer, sizeof(buffer));
-        if (bytes_received < 0) {
-            cerr << "Error receiving data from client" << endl;
-            close(client_sockfd);
-            continue;
-        }
 
-        // split the message to arguments needed for the search
+
+        // Split the message to arguments needed for the search
         string payload(buffer);
         size_t comma_pos = payload.find(',');
         int source = stoi(payload.substr(0, comma_pos));
@@ -148,17 +153,18 @@ int main(int argc, char* argv[]){
         vector<int> shortestPath;
         bool foundInCache = false;
 
+        // Check if the current request is already saved 
         for (int i = 0; i < lastRequests.size(); i++) {
-
-        if (!foundInCache) {
-            shortestPath = bfsShortestPath(graph, source, destination);
-            if (lastRequests.size() >= 10) {
-                lastRequests.pop();
-                lastResults.pop();
+            if (!foundInCache) {
+                // If that path in note saved, create it and add it to the cache
+                shortestPath = bfsShortestPath(graph, source, destination);
+                if (lastRequests.size() >= 10) {
+                    lastRequests.pop();
+                    lastResults.pop();
+                }
+                lastRequests.push(make_pair(source, destination));
+                lastResults.push(shortestPath);
             }
-            lastRequests.push(make_pair(source, destination));
-            lastResults.push(shortestPath);
-        }
         }
 
         if (!foundInCache) {
@@ -175,13 +181,13 @@ int main(int argc, char* argv[]){
         if (shortestPath.empty()) {
             cout << "No path found between nodes " << source << " and " << destination << endl;
         } else {
-            cout << "Shortest path between nodes " << source << " and " << destination << " is: ";
+            // Building the message for the client
             for (int node : shortestPath) {
                 output += to_string(node) + " ";
             }
-            cout << output << endl;
         }
 
+        // Send the message and close the connection with the client
         write(client_sockfd, output.c_str(), output.length());
         close(client_sockfd);
     }
