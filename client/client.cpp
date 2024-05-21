@@ -17,7 +17,7 @@ void printInput(const std::string& ip, int port, int source, int destination) {
 }
 
 /*
-    use the following commands (in client diractory)
+    Use the following commands (in client diractory)
     -   g++ client.cpp
     -   ./a.out <ip> <port number> <source> <destination>
 */
@@ -54,3 +54,4 @@ int main(int argc, char *argv[]) {
     close(fd);
     return 0;
 }
+
