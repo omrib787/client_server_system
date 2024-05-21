@@ -10,20 +10,26 @@
 
 using namespace std;
 
+// Test function for the terminal client input
 void printInput(const std::string& ip, int port, int source, int destination) {
     cout << "IP address: " << ip << "\nPort number: " << port 
          << "\nSource: " << source << "\nDestination: " << destination << endl;
 }
 
-// following zoom recording of Michael from 19-03
+/*
+    use the following commands (in client diractory)
+    -   g++ client.cpp
+    -   ./a.out <ip> <port number> <source> <destination>
+*/
+
+// Following zoom recording of Michael from 19-03
 int main(int argc, char *argv[]) {
     std::string ip = argv[1];
     int port = atoi(argv[2]);
     int source = atoi(argv[3]);
     int destination = atoi(argv[4]);
 
-//    printInput(ip, port, source, destination);
-
+    // Creating a TCP client socket and connecting it to server
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in addr = {0};
     addr.sin_family = AF_INET;
@@ -33,9 +39,10 @@ int main(int argc, char *argv[]) {
 
 
     // Send source and destination to the server
-    string payload = to_string(source) + "," + to_string(destination);
-    send(fd, payload.c_str(), payload.length(), 0);
+    string message = to_string(source) + "," + to_string(destination);
+    send(fd, message.c_str(), message.length(), 0);
 
+    // Receive data from a socket
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
     int bytes_received = recv(fd, buffer, sizeof(buffer), 0);
@@ -47,4 +54,3 @@ int main(int argc, char *argv[]) {
     close(fd);
     return 0;
 }
-
