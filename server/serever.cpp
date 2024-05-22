@@ -125,8 +125,11 @@ int main(int argc, char* argv[]){
     listen(fd, 5);
 
     // Setting up queues for 10 last requests and results
-    queue<pair<int, int>> lastRequests;
+    queue<pair<int, int>>lastRequests;
     queue<vector<int>> lastResults;
+
+    queue<pair<int, int>>tempRequests = lastRequests;
+    queue<vector<int>> tempResults = lastResults;
 
     while (true) {
         // The server waits for a client connection
