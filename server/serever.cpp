@@ -153,20 +153,22 @@ int main(int argc, char* argv[]){
         vector<int> shortestPath;
         bool foundInCache = false;
 
-        // Check if the current request is already saved 
-        for (int i = 0; i < lastRequests.size(); i++) {
-            if (!foundInCache) {
-                // If that path in note saved, create it and add it to the cache
-                shortestPath = bfsShortestPath(graph, source, destination);
-                if (lastRequests.size() >= 10) {
-                    lastRequests.pop();
-                    lastResults.pop();
-                }
-                lastRequests.push(make_pair(source, destination));
-                lastResults.push(shortestPath);
+        // Check if the request is in the cache
+        queue<pair<int, int>> tempRequests = lastRequests;
+        queue<vector<int>> tempResults = lastResults;
+        while (!tempRequests.empty()) {
+            pair<int, int> cachedRequest = tempRequests.front();
+            vector<int> cachedResult = tempResults.front();
+            tempRequests.pop();
+            tempResults.pop();
+            if (cachedRequest.first == source && cachedRequest.second == destination) {
+                shortestPath = cachedResult;
+                foundInCache = true;
+                break;
             }
         }
 
+        // If not found in cache, compute the shortest path
         if (!foundInCache) {
             shortestPath = bfsShortestPath(graph, source, destination);
             if (lastRequests.size() >= 10) {
