@@ -24,10 +24,10 @@ void printInput(const std::string& ip, int port, int source, int destination) {
 
 // Following zoom recording of Michael from 19-03
 int main(int argc, char *argv[]) {
-    std::string ip = argv[1];
+    string ip = argv[1];
     int port = atoi(argv[2]);
-    int source = atoi(argv[3]);
-    int destination = atoi(argv[4]);
+    string source = argv[3];
+    string destination = argv[4];
 
     // Creating a TCP client socket and connecting it to server
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
 
     // Send source and destination to the server
-    string message = to_string(source) + "," + to_string(destination);
+    string message = source + "," + destination;
     send(fd, message.c_str(), message.length(), 0);
 
     // Receive data from a socket
