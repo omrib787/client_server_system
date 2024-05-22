@@ -125,11 +125,8 @@ int main(int argc, char* argv[]){
     listen(fd, 5);
 
     // Setting up queues for 10 last requests and results
-    queue<pair<int, int>>lastRequests;
+    queue<pair<int, int>> lastRequests;
     queue<vector<int>> lastResults;
-
-    queue<pair<int, int>>tempRequests = lastRequests;
-    queue<vector<int>> tempResults = lastResults;
 
     while (true) {
         // The server waits for a client connection
@@ -155,6 +152,7 @@ int main(int argc, char* argv[]){
 
         vector<int> shortestPath;
         bool foundInCache = false;
+        string output;
 
         // Check if the request is in the cache
         queue<pair<int, int>> tempRequests = lastRequests;
@@ -164,9 +162,13 @@ int main(int argc, char* argv[]){
             vector<int> cachedResult = tempResults.front();
             tempRequests.pop();
             tempResults.pop();
+
             if (cachedRequest.first == source && cachedRequest.second == destination) {
-                shortestPath = cachedResult;
                 foundInCache = true;
+                for (int node : cachedResult) {
+                    output += to_string(node) + " ";
+                }
+            //    output += "88888 "; // Add 88888 to the output if the result was pulled from the cache
                 break;
             }
         }
@@ -180,15 +182,14 @@ int main(int argc, char* argv[]){
             }
             lastRequests.push(make_pair(source, destination));
             lastResults.push(shortestPath);
-        }
 
-        string output;
-        if (shortestPath.empty()) {
-            cout << "No path found between nodes " << source << " and " << destination << endl;
-        } else {
-            // Building the message for the client
-            for (int node : shortestPath) {
-                output += to_string(node) + " ";
+            if (shortestPath.empty()) {
+                cout << "No path found between nodes " << source << " and " << destination << endl;
+            } else {
+                // Building the message for the client
+                for (int node : shortestPath) {
+                    output += to_string(node) + " ";
+                }
             }
         }
 
