@@ -119,6 +119,14 @@ void* handleClient(void* arg){
     const map<int, vector<int>>& graph = info->graph;
     delete info;
 
+    //check if its actually multiple threads
+    pthread_t thread_id = pthread_self();
+    // Debug: print thread ID
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cout << "Thread " << thread_id << " handling client" << endl;
+    }
+
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
     int bytes_received = read(client_sockfd, buffer, sizeof(buffer));
@@ -191,31 +199,49 @@ void* handleClient(void* arg){
 }
 
 int main(int argc, char* argv[]){
-
+    // checks for the correct number of commands given to the server
+    if (argc != 3) {
+        cerr << "Usage: " << argv[0] << " <filename.csv> <port number>" << endl;
+        return 1;
+    }
+    //get the file name and the port
     string filename = argv[1];
     int port = atoi(argv[2]);
-
+    //initialize the map,red the csv file, print out a graph and make an adjacancy list
     map<int, vector<int>> graph;
     readCSV(filename, graph);
     printGraph(graph);
     writeAdjacencyListToFile(graph);
 
-    // Creating a TCP server socket to listen for incoming connections
+    //creating the socket
     int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+        cerr << "Error creating socket" << endl;
+        return 1;
+    }
+
+    // defines the server's structure
     sockaddr_in serv_addr = {0};
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     serv_addr.sin_port = htons(port);
-    bind(fd, (sockaddr*)&serv_addr, sizeof(serv_addr));
 
-    listen(fd, 5);
+    //if its not the correct ip address, give an error message
+    if (bind(fd, (sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        cerr << "Error binding socket" << endl;
+        close(fd);
+        return 1;
+    }
 
-    // Setting up queues for 10 last requests and results
-    queue<pair<int, int>> lastRequests;
-    queue<vector<int>> lastResults;
+    //the same for the socket
+    if (listen(fd, 5) < 0) {
+        cerr << "Error listening on socket" << endl;
+        close(fd);
+        return 1;
+    }
 
+    //the while loop that accepts new connections
     while (true) {
-        // The server waits for a client connection
         sockaddr_in client_addr = {0};
         socklen_t client_len = sizeof(client_addr);
         int client_sockfd = accept(fd, (sockaddr*)&client_addr, &client_len);
@@ -223,8 +249,15 @@ int main(int argc, char* argv[]){
             cerr << "Error accepting client connection" << endl;
             continue;
         }
-        // creating a new thread for each client that connects
-        Threadinfo* info=new Threadinfo{client_sockfd,graph};
+
+        // Debug: print new connection info
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cout << "New client connected, socket FD: " << client_sockfd << endl;
+        }
+
+        //create a new thread that leads to using the handleclient function
+        Threadinfo* info = new Threadinfo{client_sockfd, graph};
         pthread_t thread;
         if (pthread_create(&thread, nullptr, handleClient, info) != 0) {
             cerr << "Error creating thread" << endl;
@@ -233,65 +266,10 @@ int main(int argc, char* argv[]){
             continue;
         }
 
-        // Receiving data from client
-        char buffer[256];
-        memset(buffer, 0, sizeof(buffer));
-        int bytes_received = read(client_sockfd, buffer, sizeof(buffer));
-
-
-        // Split the message to arguments needed for the search
-        string payload(buffer);
-        size_t comma_pos = payload.find(',');
-        int source = stoi(payload.substr(0, comma_pos));
-        int destination = stoi(payload.substr(comma_pos + 1));
-
-        vector<int> shortestPath;
-        bool foundInCache = false;
-        string output;
-
-        // Check if the request is in the cache
-        queue<pair<int, int>> tempRequests = lastRequests;
-        queue<vector<int>> tempResults = lastResults;
-        while (!tempRequests.empty()) {
-            pair<int, int> cachedRequest = tempRequests.front();
-            vector<int> cachedResult = tempResults.front();
-            tempRequests.pop();
-            tempResults.pop();
-
-            if (cachedRequest.first == source && cachedRequest.second == destination) {
-                foundInCache = true;
-                for (int node : cachedResult) {
-                    output += to_string(node) + " ";
-                }
-            //    output += "88888 "; // Add 88888 to the output if the result was pulled from the cache
-                break;
-            }
-        }
-
-        // If not found in cache, compute the shortest path
-        if (!foundInCache) {
-            shortestPath = bfsShortestPath(graph, source, destination);
-            if (lastRequests.size() >= 10) {
-                lastRequests.pop();
-                lastResults.pop();
-            }
-            lastRequests.push(make_pair(source, destination));
-            lastResults.push(shortestPath);
-
-            if (shortestPath.empty()) {
-                cout << "No path found between nodes " << source << " and " << destination << endl;
-            } else {
-                // Building the message for the client
-                for (int node : shortestPath) {
-                    output += to_string(node) + " ";
-                }
-            }
-        }
-
-        // Send the message and close the connection with the client
-        write(client_sockfd, output.c_str(), output.length());
-        close(client_sockfd);
+        // Detach the thread so it can run independently
+        pthread_detach(thread);
     }
+    //closes the socket
     close(fd);
     return 0;
 }
